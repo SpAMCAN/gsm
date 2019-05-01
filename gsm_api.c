@@ -551,6 +551,7 @@ static mcTable mcDir[ARRAY_ENTRIES] __attribute__((aligned(64)));
 static int mc_Type, mc_Free, mc_Format; 
 
 void PrintDir(char* root) {
+#if 0
 	int ret;
 	mcGetDir(0, 0, root, 0, ARRAY_ENTRIES - 10, mcDir);
 	mcSync(0, NULL, &ret);
@@ -562,6 +563,7 @@ void PrintDir(char* root) {
 		else
 			printf("%s - %d bytes\n", mcDir[i].name, mcDir[i].fileSizeByte);
 	}
+#endif
 }
 
 int CreateSave(void);
@@ -597,6 +599,10 @@ void LoadModules(void)
 	mcSync(0, NULL, &ret);
 	printf("mcGetInfo returned %d\n", ret);
 	printf("Type: %d Free: %d Format: %d\n\n", mc_Type, mc_Free, mc_Format);
+	
+	PrintDir("/*");
+	PrintDir("GSMCFG/*");
+
 	CreateSave();
 
 	PrintDir("/*");
@@ -693,12 +699,14 @@ int LoadConfigFile(char* filename) {
 	fread(&settings, sizeof(struct saved_settings), 1, fil);
 	fclose(fil);
 
-	exit_option_idx = settings.exit_option_idx;
-	predef_vmode_idx = settings.predef_vmode_idx;
-	skip_videos_idx = settings.skip_videos_idx;
-	YOffset = settings.YOffset;
-	XOffset = settings.XOffset;
-	autoExec = settings.autoExec;
+	if (settings.autoExec != 0) {
+		exit_option_idx = settings.exit_option_idx;
+		predef_vmode_idx = settings.predef_vmode_idx;
+		skip_videos_idx = settings.skip_videos_idx;
+		YOffset = settings.YOffset;
+		XOffset = settings.XOffset;
+		autoExec = settings.autoExec;
+	}
 
 	return settings.autoExec;
 }
@@ -709,6 +717,14 @@ int DeleteConfigFile(char* filename) {
 	return TRUE;
 }
 
+int DirectoryExists(const char *path) {
+	int ret;
+	mcGetDir(0, 0, path, 0, ARRAY_ENTRIES - 10, mcDir);
+	mcSync(0, NULL, &ret);
+	// return ret;
+	return ret >= 0 ? TRUE : FALSE;
+}
+
 int SaveConfigFile(char* filename) {
 	if ((predef_vmode_idx == 999) || (exit_option_idx == 999)) {
 		return -1;
@@ -717,7 +733,9 @@ int SaveConfigFile(char* filename) {
 	int ret;
 	mcSync(0, NULL, &ret);
 
-	if (!DirectoryExists("mc0:GSMCFG")) {
+	// printf("Only have %i in this folder", DirectoryExists("GSMCFG/*"));
+
+	if (!DirectoryExists("GSMCFG/*")) {
 		int returnable = fioMkdir("mc0:GSMCFG");
 		if (returnable < 0) {
 			if (returnable != -4) {
@@ -3477,10 +3495,6 @@ const unsigned char mcIconData[] = {
 	0xd9, 0x0d, 0xd9, 0x0d, 0xb8, 0x09, 0xb8, 0x09
 };
 
-int DirectoryExists(const char *path) {
-	return mcGetDir(0, 0, path, 0, ARRAY_ENTRIES - 10, mcDir) > 0 ? TRUE : FALSE;
-}
-
 int CreateSave(void) {
 	
 	int mc_fd;
@@ -3508,11 +3522,12 @@ int CreateSave(void) {
 
 	static iconFVECTOR ambient = { 0.50, 0.50, 0.50, 0.00 };
 
-	if (DirectoryExists("mc0:GSMCFG/") == 0) {
-		printf("Making directory\n");
+	// printf("Only have %i in this folder", DirectoryExists("GSMCFG/*"));
+	if (!DirectoryExists("GSMCFG/*")) {
+		printf("Making directory for save file\n");
 		fioMkdir("mc0:GSMCFG");
 	} else {
-		printf("Directory exists!\n");
+		printf("Directory exists for save file!\n");
 	}
 
 	memset(&icon_sys, 0, sizeof(mcIcon));
