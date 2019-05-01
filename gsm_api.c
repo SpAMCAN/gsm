@@ -625,8 +625,6 @@ typedef struct saved_settings {
 	int autoExec;
 } saved_settings;
 
-int autoExec = 0;
-
 #define FALSE 0
 #define TRUE 1
 
@@ -638,6 +636,7 @@ int XOffset = 0;
 int YOffset = 0;
 int skip_videos_idx = 0;
 int exit_option_idx = 999;
+int autoExec = 0;
 
 int occupiedPresetSlots = 0;
 
@@ -762,6 +761,15 @@ int SaveConfigFile(char* filename) {
 	return TRUE;
 }
 
+void ResetConfig() {
+	predef_vmode_idx = 999;
+	XOffset = 0;
+	YOffset = 0;
+	skip_videos_idx = 0;
+	exit_option_idx = 999;
+	autoExec = 0;
+}
+
 void RenderMainMenu();
 int InputMainMenu();
 
@@ -882,7 +890,7 @@ int main(void)
 			if (retval != PAD_R1 || retval != PAD_R2 || retval != PAD_L1 || retval != PAD_L2) {
 				updateflag = 0;
 				char msg[256];
-				sprintf(msg, "Auto-starting with preset \n%s\n\n(Press "FONTM_TRIANGLE" to stop auto-start)", filename);
+				sprintf(msg, "Auto-starting with preset \n%s\n\n(Press "FONTM_TRIANGLE" to stop auto-start)\n(Press "FONTM_CROSS" to start GSM cleanly)", filename);
 				DisplayScreenMessage(msg, DeepSkyBlueFont, Black, GSKIT_FALIGN_CENTER, 0);
 
 				WaitTime = Timer();
@@ -894,12 +902,18 @@ int main(void)
 							updateflag = -1;
 							break;
 						}
+
+						if (retval & PAD_CROSS) {
+							ResetConfig();
+							updateflag = -1;
+							break;
+						}
 					}
 				}
 			}
 		} else if (loadresult == AUTO_LOAD) {
 			char msg[256];
-			sprintf(msg, "GSM loading with preset \n%s\n\n(Press "FONTM_TRIANGLE" to quick-start)", filename);
+			sprintf(msg, "GSM loading with preset \n%s\n\n(Press "FONTM_TRIANGLE" to quick-start)\n(Press "FONTM_CROSS" to start GSM cleanly)", filename);
 			DisplayScreenMessage(msg, GreenFont, Black, GSKIT_FALIGN_CENTER, 0);
 
 			WaitTime = Timer();
@@ -909,6 +923,12 @@ int main(void)
 					retval = paddata;
 					if (retval & PAD_TRIANGLE) {
 						updateflag = 0;
+						break;
+					}
+
+					if (retval & PAD_CROSS) {
+						ResetConfig();
+						updateflag = -1;
 						break;
 					}
 				}
