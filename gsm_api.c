@@ -648,6 +648,7 @@ int occupiedPresetSlots = 0;
 
 void DisplayScreenMessage(char* msg, u64 forecolor, u64 backcolor, int alignment, int displayTime);
 char* GetSlotName(int slot);
+char* GetSlotName_IgnoreOthers(int padInput);
 
 int FileExists(char* filename) {
 	int fd = fioOpen(filename, O_RDONLY);
@@ -879,7 +880,7 @@ int main(void)
 		}
 	}
 
-	char* filename = GetSlotName(retval); 
+	char* filename = GetSlotName_IgnoreOthers(retval);
 	GetConfigsLoaded();
 
 	fastboot_delay = 5000;
@@ -1290,6 +1291,20 @@ void RenderPresetMenu() {
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, GreenFont, "[R2] To Main Menu");
 	
 
+}
+
+char* GetSlotName_IgnoreOthers(int padInput) {
+	if (padInput & PAD_UP) {
+		return GetSlotName(PAD_UP);
+	} else if (padInput & PAD_DOWN) {
+		return GetSlotName(PAD_DOWN);
+	} else if (padInput & PAD_LEFT) {
+		return GetSlotName(PAD_LEFT);
+	} else if (padInput & PAD_RIGHT) {
+		return GetSlotName(PAD_RIGHT);
+	}
+
+	return GetSlotName(0);
 }
 
 char* GetSlotName(int slot) {
