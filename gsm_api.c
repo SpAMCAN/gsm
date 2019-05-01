@@ -887,27 +887,25 @@ int main(void)
 	if (filename != NULL) {
 		int loadresult = LoadConfigFile(filename);
 		if (loadresult == AUTO_START) {
-			if (retval != PAD_R1 || retval != PAD_R2 || retval != PAD_L1 || retval != PAD_L2) {
-				updateflag = 0;
-				char msg[256];
-				sprintf(msg, "Auto-starting with preset \n%s\n\n(Press "FONTM_TRIANGLE" to stop auto-start)\n(Press "FONTM_CROSS" to start GSM cleanly)", filename);
-				DisplayScreenMessage(msg, DeepSkyBlueFont, Black, GSKIT_FALIGN_CENTER, 0);
+			updateflag = 0;
+			char msg[256];
+			sprintf(msg, "Auto-starting with preset \n%s\n\n(Press "FONTM_TRIANGLE" to stop auto-start)\n(Press "FONTM_CROSS" to start GSM cleanly)", filename);
+			DisplayScreenMessage(msg, DeepSkyBlueFont, Black, GSKIT_FALIGN_CENTER, 0);
 
-				WaitTime = Timer();
-				while (Timer() <= (WaitTime + fastboot_delay)) {   // Wait fastboot_delay for pad press 
-					waitAnyPadReady();
-					if (readpad()) {
-						retval = paddata;
-						if (retval & PAD_TRIANGLE) {
-							updateflag = -1;
-							break;
-						}
+			WaitTime = Timer();
+			while (Timer() <= (WaitTime + fastboot_delay)) {   // Wait fastboot_delay for pad press 
+				waitAnyPadReady();
+				if (readpad()) {
+					retval = paddata;
+					if (retval & PAD_TRIANGLE) {
+						updateflag = -1;
+						break;
+					}
 
-						if (retval & PAD_CROSS) {
-							ResetConfig();
-							updateflag = -1;
-							break;
-						}
+					if (retval & PAD_CROSS) {
+						ResetConfig();
+						updateflag = -1;
+						break; 
 					}
 				}
 			}
@@ -1091,7 +1089,6 @@ void RenderMainMenu() {
 	rownumber++;
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, WhiteFont, "[DPAD] X and Y axis offsets");
 	rownumber++;
-	rownumber++;
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, WhiteFont, "[L1] Skip Videos fix");
 	rownumber++;
 	rownumber++;
@@ -1099,6 +1096,12 @@ void RenderMainMenu() {
 	rownumber++;
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, WhiteFont, "[START] Exit");
 	rownumber++;
+
+	if (predef_vmode_idx != 999 || exit_option_idx != 999 || YOffset != 0 || XOffset != 0 || skip_videos_idx != 0) {
+		rownumber++;
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, RedFont, "[L2] Reset Options");
+	}
+
 	rownumber++;
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, edge_size, (++rownumber) * 11, 1, 0.4f, GreenFont, "[R2] To Preset Menu");
 	rownumber++;
@@ -1195,6 +1198,9 @@ int InputMainMenu() {
 				return 1; //exit inner loop
 			} else if ((retval == PAD_L1)) { //Skip Videos toggle
 				skip_videos_idx ^= 1;
+				return 1; //exit inner loop
+			} else if ((retval == PAD_L2)) { // Clear current settings
+				ResetConfig();
 				return 1; //exit inner loop
 			}
 
